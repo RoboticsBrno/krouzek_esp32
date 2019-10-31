@@ -1,4 +1,5 @@
 #include "RBControl.hpp"
+#include "roboruka.h"
 
 using namespace rb;
 
@@ -55,4 +56,14 @@ void digitalniServo() {
     // obvykle je nemusíte měnit.
     servoBus.set(0, 120_deg);
     servoBus.set(0, 180_deg, 180.f, 0.0015f);
+}
+
+void arm() {
+    // Algoritmus pro výpočet pozice ruky je poměrně složitý, a težko říct zda
+    // bude fungovat i jinde než jen na Roboruce. Pokud ho potřebujete, pomůže implementace
+    // ruky v rk knihovně[1], případně konzultace se mnou.
+    // Algoritmus byl nicméně napsán tak, aby byl generický, všechny parametry ruky jsou nastavitelné.
+    // To bohužel znamená také že je složitější na používání.
+    // Ruka navíc nezávisí na digitálních servech, pouze vypočítá cílové úhly v kloubech ruky.
+    // [1]: https://github.com/RoboticsBrno/RB3201-RBControl-Roboruka-library/blob/master/src/_librk_arm.cpp#L19
 }
