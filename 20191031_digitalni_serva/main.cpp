@@ -55,6 +55,9 @@ void digitalniServo() {
     // 3. parametr je rychlost R, 4. parametr je zrychlení z 0 na rychlost R,
     // obvykle je nemusíte měnit.
     servoBus.set(0, 120_deg);
+    // _deg udělá to stejné co toto:
+    servoBus.set(0, Angle::deg(120));
+
     servoBus.set(0, 180_deg, 180.f, 0.0015f);
 }
 
