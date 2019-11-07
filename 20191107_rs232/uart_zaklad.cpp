@@ -27,8 +27,52 @@ void rs232_vychozi() {
     uart_driver_install(
         UART_NUM_1,
         256,           // Velikost SW RX bufferu
-        256,           // Velikost SW TX bufferu
+        256,           // Velikost SW TX bufferu - tx_buffer_size
         0,             // queue size - více později
         NULL,          // queue - více později
         0);            // interrupt flags - ESP_INTR_FLAG_* https://docs.espressif.com/projects/esp-idf/en/latest/api-reference/system/intr_alloc.html#macros
+
+
+    // Poslání dat do UARTu. Používá buffery, takže se data neposílají hned ven, pokud
+    // není místo.
+    // Pokud je tx_buffer_size v uart_driver_install 0, čeká, dokud se vše nezapíše do
+    // HW bufferu nebo nepošle.
+    char data[] = { 1, 2, 3, 4 };
+    int sentBytes = uart_write_bytes(UART_NUM_1, data, sizeof(data));
+    if(sentBytes < 0)
+        printf("Chyba pri posilani!\n");
+
+    // Druhá funkce na poslání dat, ignoruje SW buffery. Pokud v HW bufferu není místo (posíláte moc rychle),
+    // tak data zahodí(!) (můžete zjistit podle návratové hodnoty). Doporučuju používat jen uart_write_bytes.
+    int sentBytes = uart_tx_chars(UART_NUM_1, data, sizeof(data));
+    if(sentBytes < 0)
+        printf("Chyba pri posilani!\n");
+
+    // Pokud potřebujete, můžete pomocí této fce počkat, dokud nebude vše odeslané. Druhý parametr
+    // je maximální doba čekání.
+    err = uart_wait_tx_done(UART_NUM_1, pdMS_TO_TICKS(500)); // 500ms
+    if(err == ESP_ERR_TIMEOUT)
+        printf("Vsechno se nestihlo za 500ms odeslat!\n");
+
+
+
+    // Tato funkce vrací, kolik je zrovna v příchozím bufferu bytů:
+    size_t rx_available = 0;
+    err = uart_get_buffered_data_len(UART_NUM_1, &rx_available);
+    ESP_ERROR_CHECK(err);
+    printf("Muzu precist %u bytu\n", rx_available);
+
+    // Čtení z uartu. Funkce může přečíst méně bytů, než kolik má buffer, je třeba zkontrolovat návratovou hodnotu!
+    // Poslední parametr je čas, jak dlouho se má čekat na další data pokud jich v RX bufferech není dost.
+    uint8_t rx_buf[32];
+    int readByteCount = uart_read_bytes(UART_NUM_1, rx_buf, sizeof(rx_buf), pdMS_TO_TICKS(100));
+    if(readByteCount < 0)
+        printf("Chyba pri cteni!\n");
+    else
+        printf("Precteno %d bytu.\n", readByteCount);
+
+
+    // Vymaze obsah SW & HW RX (prichozich) bufferu
+    uart_flush(UART_NUM_1);
+
 }
