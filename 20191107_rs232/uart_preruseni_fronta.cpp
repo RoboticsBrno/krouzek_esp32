@@ -29,8 +29,8 @@ void uart_nastaveni_preruseni() {
         UART_NUM_2,
         256,           // Velikost SW RX bufferu
         256,           // Velikost SW TX bufferu - tx_buffer_size
-        32,            // queue size - velikost bufferu pro přerušení
-        &eventQueue,   // queue - fronta, kam se budou posílat přerušení
+        32,            // queue size - velikost bufferu pro přerušení     <--------
+        &eventQueue,   // queue - fronta, kam se budou posílat přerušení   <-------
         0);            // interrupt flags - ESP_INTR_FLAG_* https://docs.espressif.com/projects/esp-idf/en/latest/api-reference/system/intr_alloc.html#macros
 
     // ESP nyní bude všechy přerušení posílat do FreeRTOS queue - fronty.

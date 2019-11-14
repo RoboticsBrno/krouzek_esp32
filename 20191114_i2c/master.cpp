@@ -37,7 +37,6 @@ static void testI2CMaster() {
     uint8_t data[] = { 1, 2, 3, 4 };
     i2c_master_write(cmd, data, sizeof(data), true); // Odeslat více bytů za sebou
     i2c_master_stop(cmd); // STOP signál
-
     i2c_master_cmd_begin(I2C_NUM_0, cmd, portMAX_DELAY); // Odešle celý cmd. Blokuje tak dlouho, dokud není odesláno
                                                          // nebo nevyprší timeout (poslední parametr)
     i2c_cmd_link_delete(cmd); // Smazání cmd. Musíte zavolat na konci odesílání!

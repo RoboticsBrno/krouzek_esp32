@@ -34,4 +34,18 @@ static void testI2CMaster() {
     // nevydá READ příkaz.
     uint8_t write_data[] = { 4, 8, 15, 16, 23 };
     i2c_slave_write_buffer(I2C_NUM_1, write_data, sizeof(write_data), portMAX_DELAY);
+
+
+    intr_handle_t handle;
+    i2c_isr_register(I2C_NUM_0, isrHandler, NULL, 0, &handle);
+
+    i2c_isr_free(handle);
+}
+
+
+static void isrHandler(void *cookie) {
+    if(i2cREGISTR & BIT_PRISEL_START_PRIKAZ)
+
+
+    https://github.com/espressif/esp-idf/blob/master/components/driver/i2c.c#L427
 }

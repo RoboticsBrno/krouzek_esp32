@@ -20,6 +20,7 @@ template<typename TypPromennych> // muzete videt i template<class TypPromennych>
 TypPromennych secti(TypPromennych a, TypPromennych b) {
     return a + b;
 }
+
 // Všimněte si kódu: template<typename TypPromennych>
 // TypPromennych je zastupné jméno pro typ, se kterým je funkce zavolána.
 // Obvykle se používá jen T, zde rozepsáno na TypPromennych pro názornost.
@@ -44,6 +45,10 @@ double secti(double a, double b) {
 }
 
 static void testSpecializace() {
+    double a = 4;
+    double b = 4;
+    secti(a, b);
+
     secti(4, 4);     // 8
     secti(4.f, 4.f); // 8.f
     secti(4.0, 4.0); // 18.0
@@ -92,4 +97,3 @@ static void testMedian() {
 
     nahodnyMedian<int, -1>(); // nezkompiluje se
 }
-
