@@ -21,6 +21,7 @@ public:
         return m_data[idx];
     }
 
+
     T* data() {
         return &m_data;
     }
