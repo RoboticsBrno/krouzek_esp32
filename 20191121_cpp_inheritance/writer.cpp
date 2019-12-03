@@ -27,13 +27,21 @@ public:
         va_start(args, fmt);
         size_t len = vsnprintf(buffer, sizeof(buffer), fmt, args);
         va_end(args);
+        // printf("%d", 4, "sdfa", true, 4.2);
         return write(buffer, std::min((size_t)sizeof(buffer), len));
+    }
+};
+
+class ZlyWriter {
+public:
+    esp_err_t writeByte2(uint8_t byte) {
+        return 0;
     }
 };
 
 // Toto je podtřída Writeru. Implementuje virtuální metodu write
 // a "přenechává" si ostatní metody z Writeru
-class UartWriter : public Writer {
+class UartWriter : public Writer, public ZlyWriter {
 public:
     UartWriter(uart_port_t port) : Writer() {
         m_port = port;
@@ -73,6 +81,8 @@ static void testInheritance() {
     // Musíme vytvořit až pod-třídy Writeru
     UartWriter uart(UART_NUM_1);
     FileWriter file(stdout);
+
+    uart.writeByte(4);
 
     // Použijeme metody z Writeru, i když máme instance jeho "dětí"
     uart.printf("test uart %f\n", 4.2);
