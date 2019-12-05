@@ -1,6 +1,9 @@
 #include <driver/spi_master.h>
 #include <Arduino.h>
 
+// Na reálné použití můžete kouknout v driveru pro senzor na čáru:
+// https://github.com/RoboticsBrno/Esp32-Mcp3008-LineSensor/blob/master/src/mcp3008_driver.cpp#L17
+
 static void setupSpiMaster() {
 
     // Nastavení jedné sběrnice,
