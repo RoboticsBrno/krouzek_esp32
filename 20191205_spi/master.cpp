@@ -15,6 +15,7 @@ static void setupSpiMaster() {
     buscfg.quadwp_io_num = -1;
     buscfg.quadhd_io_num = -1;
 
+    //                                 VSPI_HOST           DMA kanál
     esp_err_t err = spi_bus_initialize(HSPI_HOST, &buscfg, 0);
     ESP_ERROR_CHECK(err);
 
@@ -93,8 +94,8 @@ static void spiMasterTransAsync(spi_device_handle_t dev) {
     spi_transaction_t trans2 = { 0 };
     trans2.length = 2 * 8; // délka transakce v BITECH!
     trans2.flags = SPI_TRANS_USE_RXDATA | SPI_TRANS_USE_TXDATA; // použij pole uvnitř spi_transaction_t místo vlastních
-    trans2.tx_data[0] = 0; // tx_data a rx_data jsou char[4]
-    trans2.tx_data[1] = 2;
+    trans2.tx_data[0] = 2; // tx_data a rx_data jsou char[4]
+    trans2.tx_data[1] = 0;
     //trans2.rx_buffer = (void*)&rx; // NELZE použít s SPI_TRANS_USE_RXDATA
     //trans2.tx_buffer = tx; // NELZE použít s SPI_TRANS_USE_TXDATA
 

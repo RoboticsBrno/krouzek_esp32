@@ -1,4 +1,6 @@
 
+#include <thread>
+
 // Z Arduino frameworku
 #include <Arduino.h>
 #include <WiFi.h>
@@ -38,6 +40,7 @@ void setup() {
         request->send_P(200, "text/html", index_html);
     });
 
+    // http://192.168.42.23/debug
     gServer.on("/debug", HTTP_GET, [](AsyncWebServerRequest *request){
         // "Streamovaná" odpověď, zapisuje se průběžně.
         AsyncResponseStream *response = request->beginResponseStream("text/plain");
@@ -60,18 +63,20 @@ void setup() {
         // Jedna hlavička podle jména
         if(request->hasHeader("User-Agent")) {
             auto h = request->header("User-Agent");
-            response->printf("User-Agent: %s", h.c_str());
+            response->printf("User-Agent: %s\n", h.c_str());
         }
+
+        response->printf("\nParametry:\n");
 
         // Projdeme všechny příchozí parametry
         for(size_t i = 0; i < request->params(); ++i){
             auto* p = request->getParam(i);
             if(p->isFile()){ // upload souboru
-                response->printf("FILE[%s]: %s, size: %u\n", p->name().c_str(), p->value().c_str(), p->size());
+                response->printf("    FILE[%s]: %s, size: %u\n", p->name().c_str(), p->value().c_str(), p->size());
             } else if(p->isPost()){ // POST parametr
-                response->printf("POST[%s]: %s\n", p->name().c_str(), p->value().c_str());
+                response->printf("    POST[%s]: %s\n", p->name().c_str(), p->value().c_str());
             } else { // GET parametr
-                response->printf("GET[%s]: %s\n", p->name().c_str(), p->value().c_str());
+                response->printf("    GET[%s]: %s\n", p->name().c_str(), p->value().c_str());
             }
         }
 
@@ -126,4 +131,6 @@ void setup() {
 void loop() {
     // DNS server není Async, musí se takto zpracovávat.
     gDnsServer.processNextRequest();
+
+    usleep(1000);
 }

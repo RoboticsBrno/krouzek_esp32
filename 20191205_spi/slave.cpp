@@ -45,7 +45,7 @@ static void spiSlaveTransBlocking(spi_host_device_t host) {
     trans.tx_buffer = &data;
 
     // zařazí transakci do fronty a počká, dokud ji master nevyčte
-    esp_err_t err = spi_slave_transmit(host, &trans, portMAX_DELAY);
+    esp_err_t err = spi_slave_transmit(host, &trans, pdMS_TO_TICKS(500));
     ESP_ERROR_CHECK(err);
 }
 
