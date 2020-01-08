@@ -43,7 +43,8 @@ static void onPacketReceived(const std::string& command, rbjson::Object *pkt) {
         rbjson::Array *data = pkt->getArray("data");
         for(size_t i = 0; i < data->size(); ++i) {
             // když pracujeme s JSONem, musíme vědět, jaké datové typy nám přijdou.
-            printf("joy data[%d] == %d\n", i, data->getInt(i));
+            rbjson::Object *joy = data->getObject(i);
+            printf("joy data[%d] == %d %d\n", i, joy->getInt("x"), joy->getInt("y"));
         }
     } else if(command == "getinfo") {
         // Příklad konstrukce nového JSON objektu pro odpověď.
@@ -94,3 +95,4 @@ static void onPacketReceived(const std::string& command, rbjson::Object *pkt) {
         gProt->send_mustarrive("info", odpoved.release());
     }
 }
+
