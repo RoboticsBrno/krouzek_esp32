@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-
 from vpython import *
 
 # DOKUMENTACE
@@ -56,9 +55,6 @@ hrac_ai = box(pos=vector(POLE_SIRKA, 0, 0), size=HRAC_VELIKOST, color=color.red)
 # vytvoření míčku
 ball = sphere(color=color.green, radius=BALL_POLOMER)
 
-# hmotnost - ovlivňuje pohyb
-ball.mass = 1.0
-
 # počáteční pozice je těsně vedle hráče
 ball.pos = hrac_clovek.pos + vector(BALL_POLOMER, 0, 0)
 ball.p = uhel_na_vector(30 + random()*120)
@@ -68,7 +64,7 @@ while True:
     rate(33)
 
     # Pohyb míčku
-    ball.pos = ball.pos + (ball.p / ball.mass) * RYCHLOST_BALL
+    ball.pos = ball.pos + ball.p * RYCHLOST_BALL
 
     # Pohyb hráče - počítač
     if hrac_ai.pos.y < ball.pos.y:
@@ -108,5 +104,3 @@ while True:
         else:
             ball.pos = hrac.pos + vector(BALL_POLOMER*strana, 0, 0)
             ball.p = uhel_na_vector((30 + random()*120)*strana)
-
-
