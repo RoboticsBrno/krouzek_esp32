@@ -31,10 +31,6 @@ def uhel_na_vector(stupne):
     radiany = radians(stupne)
     return vector(sin(radiany), cos(radiany), 0)
 
-def vector_na_uhel(vec):
-    uhel = asin(vec.x)
-    return degrees(uhel)
-
 def kolize(hrac, ball):
     vrchni_okraj = hrac.pos.y + PUL_HRACE
     spodni_okraj = hrac.pos.y - PUL_HRACE
@@ -57,6 +53,10 @@ ball = sphere(color=color.green, radius=BALL_POLOMER)
 
 # počáteční pozice je těsně vedle hráče
 ball.pos = hrac_clovek.pos + vector(BALL_POLOMER, 0, 0)
+
+# Tady je potřeba nakreslit, kde ten úhel je - od osy Y po směru
+# hodinových ručiček, viz uhel.png
+# Bohužel je tu trochu trigonometrie, ale bez ní je to ještě míň přehledné :/
 ball.p = uhel_na_vector(30 + random()*120)
 
 while True:
@@ -72,6 +72,25 @@ while True:
     else:
         hrac_ai.pos.y -= RYCHLOST_HRAC
 
+    # Odraz míčku od horní a spodní hrany
+    if ball.pos.y < -POLE_VYSKA or ball.pos.y > POLE_VYSKA:
+        ball.p.y = -ball.p.y
+
+    # detekce vyjetí z pole doprava/doleva
+    if ball.pos.x < -POLE_SIRKA or ball.pos.x > POLE_SIRKA:
+        strana = 1 if ball.pos.x < 0 else -1
+        hrac = hrac_clovek if strana == 1 else hrac_ai
+
+        # kolize s hráčem
+        if kolize(hrac, ball):
+            od_stredu_hrace = (ball.pos.y - hrac.pos.y) / PUL_HRACE
+            ball.p = uhel_na_vector((90 - 60 * od_stredu_hrace) * strana)
+        # gól!
+        else:
+            sleep(1)
+            ball.pos = hrac.pos + vector(BALL_POLOMER*strana, 0, 0)
+            ball.p = uhel_na_vector((30 + random()*120)*strana)
+
     # Pohyb hráče - člověka
     klavesy = keysdown()
     if 'up' in klavesy:
@@ -85,22 +104,3 @@ while True:
             hrac.pos.y = POLE_VYSKA - PUL_HRACE
         elif hrac.pos.y - PUL_HRACE < -POLE_VYSKA:
             hrac.pos.y = -POLE_VYSKA + PUL_HRACE
-
-    # Odraz míčku od horní a spodní hrany
-    if ball.pos.y < -POLE_VYSKA or ball.pos.y > POLE_VYSKA:
-        ball.p.y = -ball.p.y
-
-    # detekce vyjezí z pole doprava/doleva
-    if ball.pos.x < -POLE_SIRKA or ball.pos.x > POLE_SIRKA:
-
-        strana = 1 if ball.pos.x < 0 else -1
-        hrac = hrac_clovek if strana == 1 else hrac_ai
-
-        # kolize s hráčem
-        if kolize(hrac, ball):
-            od_stredu_hrace = (ball.pos.y - hrac.pos.y) / HRAC_VELIKOST.y
-            ball.p = uhel_na_vector((90 - 80 * od_stredu_hrace) * strana)
-        # gól!
-        else:
-            ball.pos = hrac.pos + vector(BALL_POLOMER*strana, 0, 0)
-            ball.p = uhel_na_vector((30 + random()*120)*strana)
