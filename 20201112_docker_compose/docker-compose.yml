@@ -1,0 +1,18 @@
+version: "3.1"
+services:
+  mysql_server:
+    image: mariadb:10.5.8-focal
+    environment:
+      MYSQL_ROOT_PASSWORD: tajneheslo
+
+  phpmyadmin:
+    image: phpmyadmin:5.0.4
+    environment:
+      PMA_HOST: mysql_server
+    ports:
+      - "5001:80"
+
+  mujweb:
+    build: mujweb
+    ports:
+      - "5000:80"
