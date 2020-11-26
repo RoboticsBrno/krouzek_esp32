@@ -9,10 +9,11 @@ services:
     image: phpmyadmin:5.0.4
     environment:
       PMA_HOST: mysql_server
+    # -p
     ports:
       - "5001:80"
 
   mujweb:
-    build: mujweb
+    build: ./mujweb-zdroj
     ports:
       - "5000:80"
