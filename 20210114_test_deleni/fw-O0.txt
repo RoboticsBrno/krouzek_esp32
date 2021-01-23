@@ -1,3 +1,17 @@
+   uint8 (1) divide took   94ms - 1.00x
+  uint16 (2) divide took   96ms - 1.02x
+  uint32 (4) divide took   98ms - 1.04x
+  uint64 (8) divide took  214ms - 2.28x
+   float (4) divide took  181ms - 1.93x
+  double (8) divide took  859ms - 9.14x
+
+   uint8 (1) multiply took   94ms - 1.00x
+  uint16 (2) multiply took   96ms - 1.02x
+  uint32 (4) multiply took   96ms - 1.02x
+  uint64 (8) multiply took  123ms - 1.31x
+   float (4) multiply took   98ms - 1.04x
+  double (8) multiply took  226ms - 2.40x
+
 
 .pio/build/esp32dev/firmware.elf:     file format elf32-xtensa-le
 

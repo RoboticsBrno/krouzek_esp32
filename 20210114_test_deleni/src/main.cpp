@@ -1,7 +1,7 @@
 #include <Arduino.h>
 
 template <typename T>
-static void testDiv(const char *name)
+static TickType_t testDiv(const char *name, TickType_t base)
 {
     const size_t size = 8000;
     std::vector<T> data(size);
@@ -20,12 +20,20 @@ static void testDiv(const char *name)
             data[i] /= div;
         }
     }
-    printf("%8s (%d) divide took %4dms\n", name, sizeof(T), xTaskGetTickCount() - start);
+
+    auto duration = xTaskGetTickCount() - start;
+    if (base == 0)
+        base = duration;
+
+    printf("%8s (%d) divide took %4dms - %.2fx\n", name, sizeof(T), duration, float(duration) / float(base));
+
     vTaskDelay(10);
+
+    return duration;
 }
 
 template <typename T>
-static void testMult(const char *name)
+static TickType_t testMult(const char *name, TickType_t base)
 {
     const size_t size = 8000;
     std::vector<T> data(size);
@@ -44,27 +52,38 @@ static void testMult(const char *name)
             data[i] *= div;
         }
     }
-    printf("%8s (%d) multiply took %dms\n", name, sizeof(T), xTaskGetTickCount() - start);
+
+    auto duration = xTaskGetTickCount() - start;
+    if (base == 0)
+        base = duration;
+
+    printf("%8s (%d) multiply took %4dms - %.2fx\n", name, sizeof(T), duration, float(duration) / float(base));
     vTaskDelay(10);
+
+    return duration;
 }
 
 void setup()
 {
-    testDiv<uint8_t>("uint8");
-    testDiv<uint16_t>("uint16");
-    testDiv<uint32_t>("uint32");
-    testDiv<uint64_t>("uint64");
-    testDiv<float>("float");
-    testDiv<double>("double");
+    vTaskDelay(500);
+
+    printf("\n\n");
+
+    auto base = testDiv<uint8_t>("uint8", 0);
+    testDiv<uint16_t>("uint16", base);
+    testDiv<uint32_t>("uint32", base);
+    testDiv<uint64_t>("uint64", base);
+    testDiv<float>("float", base);
+    testDiv<double>("double", base);
 
     printf("\n");
 
-    testMult<uint8_t>("uint8");
-    testMult<uint16_t>("uint16");
-    testMult<uint32_t>("uint32");
-    testMult<uint64_t>("uint64");
-    testMult<float>("float");
-    testMult<double>("double");
+    base = testMult<uint8_t>("uint8", 0);
+    testMult<uint16_t>("uint16", base);
+    testMult<uint32_t>("uint32", base);
+    testMult<uint64_t>("uint64", base);
+    testMult<float>("float", base);
+    testMult<double>("double", base);
 }
 
 void loop()
