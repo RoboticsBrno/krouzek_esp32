@@ -1,3 +1,16 @@
+   uint8 (1) divide took   12ms - 1.00x
+  uint16 (2) divide took   18ms - 1.50x
+  uint32 (4) divide took   18ms - 1.50x
+  uint64 (8) divide took  136ms - 11.33x
+   float (4) divide took  103ms - 8.58x
+  double (8) divide took  744ms - 62.00x
+
+   uint8 (1) multiply took   10ms - 1.00x
+  uint16 (2) multiply took   17ms - 1.70x
+  uint32 (4) multiply took   17ms - 1.70x
+  uint64 (8) multiply took   23ms - 2.30x
+   float (4) multiply took   20ms - 2.00x
+  double (8) multiply took  149ms - 14.90x
 
 .pio/build/esp32dev/firmware.elf:     file format elf32-xtensa-le
 
@@ -23762,7 +23775,7 @@ void setup()
 400d0b97:	201110        	or	a1, a1, a1
 400d0b9a:	07b065        	call8	400d86a0 <puts>
       allocate(size_type __n, const void* = 0)
-      { 
+      {
 	if (__n > this->max_size())
 	  std::__throw_bad_alloc();
 

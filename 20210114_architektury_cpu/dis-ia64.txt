@@ -1,0 +1,123 @@
+
+test.o:     file format elf64-ia64-little
+
+
+Disassembly of section .text:
+
+0000000000000000 <printf2>:
+   0:   00 80 20 10 80 05       [MII]       alloc r16=ar.pfs,8,8,0
+   6:   10 41 30 00 42 40                   adds r17=8,r12
+   c:   82 67 fc 8c                         adds r18=-8,r12
+  10:   00 10 00 18 00 21       [MII]       mov r2=r12
+  16:   c0 00 32 7e 46 00                   adds r12=-64,r12
+  1c:   00 00 04 00                         nop.i 0x0
+  20:   0a 18 00 48 22 04       [MMI]       mov.m r3=ar.unat;;
+  26:   80 3e 45 b2 2f 00                   st8.spill [r17]=r39,-24
+  2c:   00 00 04 00                         nop.i 0x0
+  30:   09 00 98 04 d8 11       [MMI]       st8.spill [r2]=r38
+  36:   00 2f 49 b2 2f 00                   st8.spill [r18]=r37,-16
+  3c:   00 00 04 00                         nop.i 0x0;;
+  40:   09 80 93 22 d9 17       [MMI]       st8.spill [r17]=r36,-16
+  46:   00 1f 49 b2 2f 00                   st8.spill [r18]=r35,-16
+  4c:   00 00 04 00                         nop.i 0x0;;
+  50:   09 00 88 22 d8 11       [MMI]       st8.spill [r17]=r34
+  56:   00 08 49 b0 23 c0                   st8.spill [r18]=r33
+  5c:   01 14 fc 8c                         adds r14=-64,r2;;
+  60:   01 00 80 1c 98 11       [MII]       st8 [r14]=r32
+  66:   e0 00 04 00 48 00                   addl r14=0,r1
+  6c:   02 14 fc 8c                         adds r16=-64,r2;;
+  70:   0a 78 00 20 18 10       [MMI]       ld8 r15=[r16];;
+  76:   00 78 38 30 23 00                   st8 [r14]=r15
+  7c:   00 00 04 00                         nop.i 0x0
+  80:   11 00 0c 48 2a 04       [MIB]       mov.m ar.unat=r3
+  86:   c0 00 08 00 42 80                   mov r12=r2
+  8c:   08 00 84 00                         br.ret.sptk.many b0;;
+
+0000000000000090 <main>:
+  90:   00 08 19 08 80 05       [MII]       alloc r33=ar.pfs,6,4,0
+  96:   20 02 30 00 42 80                   mov r34=r12
+  9c:   01 66 fc 8c                         adds r12=-32,r12
+  a0:   01 00 00 00 01 00       [MII]       nop.m 0x0
+  a6:   00 02 00 62 00 60                   mov r32=b0
+  ac:   04 08 00 84                         mov r35=r1;;
+  b0:   0a 70 d0 45 3f 23       [MMI]       adds r14=-12,r34;;
+  b6:   00 00 38 20 23 c0                   st4 [r14]=r0
+  bc:   81 17 fd 8c                         adds r14=-8,r34
+  c0:   0b 78 04 00 00 24       [MMI]       mov r15=1;;
+  c6:   00 78 38 20 23 80                   st4 [r14]=r15
+  cc:   04 08 00 90                         addl r36=0,r1;;
+  d0:   10 20 01 48 18 10       [MIB]       ld8 r36=[r36]
+  d6:   00 00 00 02 00 00                   nop.i 0x0
+  dc:   38 ff ff 58                         br.call.sptk.many b0=0 <printf2>
+  e0:   03 08 00 46 00 21       [MII]       mov r1=r35
+  e6:   e0 00 88 00 42 80                   mov r14=r34;;
+  ec:   04 08 00 90                         addl r36=0,r1;;
+  f0:   10 20 01 48 18 10       [MIB]       ld8 r36=[r36]
+  f6:   50 02 38 00 42 00                   mov r37=r14
+  fc:   08 00 00 50                         br.call.sptk.many b0=f0 <main+0x60>
+ 100:   0b 08 00 46 00 21       [MMI]       mov r1=r35;;
+ 106:   40 02 04 00 48 00                   addl r36=0,r1
+ 10c:   00 00 04 00                         nop.i 0x0;;
+ 110:   10 20 01 48 18 10       [MIB]       ld8 r36=[r36]
+ 116:   00 00 00 02 00 00                   nop.i 0x0
+ 11c:   f8 fe ff 58                         br.call.sptk.many b0=0 <printf2>
+ 120:   01 08 00 46 00 21       [MII]       mov r1=r35
+ 126:   e0 08 00 00 48 e0                   mov r14=1
+ 12c:   01 17 fd 8c                         adds r15=-16,r34;;
+ 130:   11 00 38 1e 90 11       [MIB]       st4 [r15]=r14
+ 136:   00 00 00 02 00 00                   nop.i 0x0
+ 13c:   c0 00 00 40                         br.few 1f0 <main+0x160>;;
+ 140:   02 70 d0 45 3f 23       [MII]       adds r14=-12,r34
+ 146:   40 02 04 00 48 00                   addl r36=0,r1;;
+ 14c:   00 00 04 00                         nop.i 0x0
+ 150:   18 20 01 48 18 10       [MMB]       ld8 r36=[r36]
+ 156:   50 02 38 20 20 00                   ld4 r37=[r14]
+ 15c:   b8 fe ff 58                         br.call.sptk.many b0=0 <printf2>
+ 160:   00 08 00 46 00 21       [MII]       mov r1=r35
+ 166:   e0 e0 8b 7e 46 00                   adds r14=-4,r34
+ 16c:   42 17 fd 8c                         adds r16=-12,r34
+ 170:   0a 78 e0 45 3f 23       [MMI]       adds r15=-8,r34;;
+ 176:   00 01 40 20 20 00                   ld4 r16=[r16]
+ 17c:   00 00 04 00                         nop.i 0x0
+ 180:   0b 78 00 1e 10 10       [MMI]       ld4 r15=[r15];;
+ 186:   f0 80 3c 00 40 00                   add r15=r16,r15
+ 18c:   00 00 04 00                         nop.i 0x0;;
+ 190:   01 00 3c 1c 90 11       [MII]       st4 [r14]=r15
+ 196:   e0 a0 8b 7e 46 e0                   adds r14=-12,r34
+ 19c:   81 17 fd 8c                         adds r15=-8,r34;;
+ 1a0:   0a 78 00 1e 10 10       [MMI]       ld4 r15=[r15];;
+ 1a6:   00 78 38 20 23 c0                   st4 [r14]=r15
+ 1ac:   81 17 fd 8c                         adds r14=-8,r34
+ 1b0:   0b 78 f0 45 3f 23       [MMI]       adds r15=-4,r34;;
+ 1b6:   f0 00 3c 20 20 00                   ld4 r15=[r15]
+ 1bc:   00 00 04 00                         nop.i 0x0;;
+ 1c0:   02 00 3c 1c 90 11       [MII]       st4 [r14]=r15
+ 1c6:   00 81 8b 7e 46 00                   adds r16=-16,r34;;
+ 1cc:   00 00 04 00                         nop.i 0x0
+ 1d0:   0b 70 00 20 10 10       [MMI]       ld4 r14=[r16];;
+ 1d6:   e0 08 38 00 42 e0                   adds r14=1,r14
+ 1dc:   01 17 fd 8c                         adds r15=-16,r34;;
+ 1e0:   00 00 38 1e 90 11       [MII]       st4 [r15]=r14
+ 1e6:   00 00 00 02 00 00                   nop.i 0x0
+ 1ec:   00 00 04 00                         nop.i 0x0
+ 1f0:   0b 70 00 44 00 21       [MMI]       mov r14=r34;;
+ 1f6:   e0 00 38 20 20 00                   ld4 r14=[r14]
+ 1fc:   02 17 fd 8c                         adds r16=-16,r34;;
+ 200:   0b 78 00 20 10 10       [MMI]       ld4 r15=[r16];;
+ 206:   70 70 3c 0c 61 00                   cmp4.lt p7,p6=r14,r15
+ 20c:   00 00 04 00                         nop.i 0x0;;
+ 210:   cb 70 04 00 00 e1       [MMI] (p06) adds r14=1,r0;;
+ 216:   e1 00 00 00 42 00             (p07) mov r14=r0
+ 21c:   00 00 04 00                         nop.i 0x0;;
+ 220:   10 00 00 00 01 00       [MIB]       nop.m 0x0
+ 226:   70 00 38 0c 28 03                   tbit.z p7,p6=r14,0
+ 22c:   20 ff ff 4a                   (p06) br.cond.dptk.few 140 <main+0xb0>
+ 230:   0a 70 00 00 00 21       [MMI]       mov r14=r0;;
+ 236:   80 00 38 00 42 00                   mov r8=r14
+ 23c:   10 02 aa 00                         mov.i ar.pfs=r33
+ 240:   00 00 00 00 01 00       [MII]       nop.m 0x0
+ 246:   00 00 05 80 03 80                   mov b0=r32
+ 24c:   01 10 01 84                         mov r12=r34
+ 250:   11 00 00 00 01 00       [MIB]       nop.m 0x0
+ 256:   00 00 00 02 00 80                   nop.i 0x0
+ 25c:   08 00 84 00                         br.ret.sptk.many b0;;
