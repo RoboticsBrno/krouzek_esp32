@@ -9,19 +9,10 @@ using std::iterator_traits;
 
 class Range {
 public:
-    class const_iterator {
+    class const_iterator : public std::iterator<std::forward_iterator_tag, int> {
         friend class Range;
 
-        typedef std::iterator_traits<const const_iterator*> __traits_type;
-
     public:
-        typedef const_iterator iterator_type;
-        typedef typename __traits_type::iterator_category iterator_category;
-        typedef typename __traits_type::value_type value_type;
-        typedef typename __traits_type::difference_type difference_type;
-        typedef typename __traits_type::reference reference;
-        typedef typename __traits_type::pointer pointer;
-
         // Dereference na hodnotu
         const int& operator*() const { return m_pos; }
         int const* operator->() const { return &m_pos; }
@@ -81,6 +72,11 @@ void testRange() {
     printf("  Vypis z range:\n");
     for (auto itr = r.begin(); itr != r.end(); ++itr) {
         printf("    %d\n", *itr);
+    }
+
+    printf("\n  Foreach:\n");
+    for (auto n : r) {
+        printf("    %d\n", n);
     }
 
     printf("\n  Kopirovani z range\n");
