@@ -1,3 +1,6 @@
 [submodule "20210318_qt_imgui/qtimgui"]
 	path = 20210318_qt_imgui/qtimgui
 	url = https://github.com/seanchas116/qtimgui.git
+[submodule "20210520_gridui_dev/lib/Esp32-RBGridUI"]
+	path = 20210520_gridui_dev/lib/Esp32-RBGridUI
+	url = git@github.com:RoboticsBrno/Esp32-RBGridUI.git
