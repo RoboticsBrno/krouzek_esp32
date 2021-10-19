@@ -1,0 +1,21 @@
+{
+    "presets": [
+      ["@babel/preset-env", { }],
+      [ "@babel/preset-typescript",
+        {
+          "onlyRemoveTypeImports": true
+        }
+      ]
+    ],
+    "targets":"node 0.11",
+    "plugins": [
+        "@babel/plugin-transform-arrow-functions",
+        "@babel/plugin-transform-async-to-generator",
+        "@babel/plugin-transform-template-literals",
+        "@babel/plugin-transform-regenerator",
+        "@babel/plugin-proposal-private-property-in-object",
+        "@babel/plugin-proposal-class-properties",
+        "@babel/plugin-transform-classes",
+        "@babel/plugin-transform-block-scoping"
+    ]
+}
