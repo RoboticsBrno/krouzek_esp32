@@ -14,13 +14,9 @@ public:
 
   NmeaLineBuffer() : m_pos(0) {}
 
-  size_t free() const {
-    return BufferSize - m_pos - 1;
-  }
+  size_t free() const { return BufferSize - m_pos - 1; }
 
-  size_t size() const {
-    return BufferSize - 1;
-  }
+  size_t size() const { return BufferSize - 1; }
 
   const char *begin() const { return m_buf.begin(); }
   char *begin() { return m_buf.begin(); }
@@ -46,6 +42,7 @@ private:
 enum NmeaMessageType : uint8_t {
   Unknown = 0,
   GGA = 1, // Time, position and fix type data
+  RMC = 2, // Time, date, position, speed, course
 };
 
 enum NmeaFixIndicator : uint8_t {
@@ -64,6 +61,12 @@ struct NmeaMessage {
     uint8_t minutes;
   };
 
+  struct GpsDate {
+    uint8_t day;
+    uint8_t month;
+    uint8_t year; // last two digits only
+  };
+
   struct GGAMessage {
     GpsTime time;
 
@@ -73,10 +76,23 @@ struct NmeaMessage {
     uint8_t used_satellites;
     float HDOP;
     float altitude_meters;
+    float geoid_separation;
+  };
+
+  struct RMCMessage {
+    GpsTime time;
+    GpsDate date;
+    char status;
+    float latitude;
+    float longitude;
+    float speed_over_ground;
+    float course_over_ground;
+    float magnetic_variation;
   };
 
   union {
     GGAMessage gga;
+    RMCMessage rmc;
   };
 };
 
@@ -110,6 +126,27 @@ public:
             case 7: sscanf(field, "%f", &g.HDOP); break;
             case 8: sscanf(field, "%f", &g.altitude_meters); break;
             case 9: if(*field != 'M') g.altitude_meters = 0; break; // prevent unit mismatch, not sure if anything else than 'M' can be emitted
+            case 10: sscanf(field, "%f", &g.geoid_separation); break;
+            case 11: if(*field != 'M') g.geoid_separation = 0; break; // prevent unit mismatch, not sure if anything else than 'M' can be emitted
+          }
+      });
+    } else if(memcmp(typeStr, "RMC", 3) == 0) {
+      msg.type = NmeaMessageType::RMC;
+      auto& r = msg.rmc;
+
+      iterateOverFields(fieldsStr, [&](size_t idx, const char *field) {
+          switch(idx) {
+            case 0: parseTime(field, r.time); break;
+            case 1: r.status = *field; break;
+            case 2: parseLatitude(field, r.latitude); break;
+            case 3: if(*field == 'S') r.latitude *= -1; break;
+            case 4: parseLongitude(field, r.longitude); break;
+            case 5: if(*field == 'W') r.longitude *= -1; break;
+            case 6: sscanf(field, "%f", &r.speed_over_ground); break;
+            case 7: sscanf(field, "%f", &r.course_over_ground); break;
+            case 8: parseDate(field, r.date); break;
+            case 9: sscanf(field, "%f", &r.magnetic_variation); break;
+            case 10: if(*field == 'W') r.magnetic_variation *= -1; break;
           }
       });
     }
@@ -142,6 +179,10 @@ private:
 
   void parseTime(const char *src, NmeaMessage::GpsTime& dest) {
     sscanf(src, "%2hhu%2hhu%f", &dest.hours, &dest.minutes, &dest.seconds);
+  }
+
+  void parseDate(const char *src, NmeaMessage::GpsDate& dest) {
+    sscanf(src, "%2hhu%2hhu%2hhu", &dest.day, &dest.month, &dest.year);
   }
 
   void parseLatitude(const char *src, float& dest) {

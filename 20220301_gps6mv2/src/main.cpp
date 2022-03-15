@@ -48,25 +48,58 @@ extern "C" void app_main()
     }*/
 
     NmeaParser parser(UART_NUM_1);
+
+    float lastLat = 0, lastLon = 0;
+
     while(1) {
       auto msg = parser.readMessage();
-      printf("line: %s", msg.raw);
-      if(msg.type == NmeaMessageType::GGA) {
+      //printf("%s", msg.raw);
+
+      switch(msg.type) {
+      case NmeaMessageType::GGA: {
         auto& g = msg.gga;
-        printf("    Date: %d:%d:%2.3f at %f %f alt %f, fix %d satelites %d\n",
+        printf("                    HDOP: %f m altitude: %f separation: %f %f\n", g.HDOP, g.altitude_meters, g.geoid_separation,
+          g.altitude_meters - g.geoid_separation);
+        /*printf("                                                Date: %d:%d:%2.3f at %f %f alt %f, fix %d satelites %d\n",
           g.time.hours, g.time.minutes, g.time.seconds,
           g.latitude, g.longitude, g.altitude_meters,
           g.fix_indicator, g.used_satellites);
         
         auto dist = coords::distanceMeters(g.latitude, g.longitude, 49.1944522, 16.5995939);
         auto distf = coords::distanceMetersFast(g.latitude, g.longitude, 49.1944522, 16.5995939);
-        printf("    Distance to spilberk: %f / %f km\n", dist/1000,  distf/1000);
+        auto bearing = coords::bearingInitial(g.latitude, g.longitude, 49.1944522, 16.5995939) + rand()%10;
+        printf("                                                    Distance to spilberk: %f / %f km, bearing: %f°\n", dist/1000, distf/1000, bearing);
+
+        dist = coords::distanceMeters(g.latitude, g.longitude, 49.4875122, 16.6599706);
+        distf = coords::distanceMetersFast(g.latitude, g.longitude, 49.4875122, 16.6599706);
+        bearing = coords::bearingInitial(g.latitude, g.longitude, 49.4875122, 16.6599706) + rand()%10;
+        printf("                                                    Distance to Boskovice: %f / %f km, bearing: %f°\n", dist / 1000, distf / 1000, bearing);
+        
 
         dist = coords::distanceMeters(g.latitude, g.longitude, -44.6190189, 167.8687603);
         distf = coords::distanceMetersFast(g.latitude, g.longitude, -44.6190189, 167.8687603);
-        printf("    Distance to Milford Sound: %f / %f km\n", dist / 1000, distf / 1000);
-
+        bearing = coords::bearingInitial(g.latitude, g.longitude, -44.6190189, 167.8687603) + rand()%10;
+        printf("                                                    Distance to Milford Sound: %f / %f km, bearing: %f°\n", dist / 1000, distf / 1000, bearing);
+        */
+        break;
+      }
+      case NmeaMessageType::RMC: {
+        auto& r = msg.rmc;
+        /*printf("                                                    Date: 20%d-%02d-%02d %2d:%02d:%2.3f Speed: %f knots (%f km/h) heading: %f\n",
+                r.date.year, r.date.month, r.date.day, r.time.hours, r.time.minutes, r.time.seconds,
+                r.speed_over_ground, r.speed_over_ground * 1.852f, r.course_over_ground);*/
         
+        auto distFromLast = coords::distanceMeters(lastLat, lastLon, r.latitude, r.longitude);
+        auto bearingFromLast = coords::bearingInitial(lastLat, lastLon, r.latitude, r.longitude);
+
+        printf("Distance from last: %fm, heading: %f (%f), speed: %f km/h\n",
+          distFromLast, bearingFromLast, r.course_over_ground, r.speed_over_ground * 1.852f);
+
+        lastLat = r.latitude;
+        lastLon = r.longitude;
+        break;
+      }
+      default: break;
       }
     }
 }
