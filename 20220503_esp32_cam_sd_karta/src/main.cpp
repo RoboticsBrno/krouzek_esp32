@@ -18,6 +18,12 @@
 #include "sdmmc_cmd.h"
 #include "driver/sdmmc_host.h"
 
+#define cimg_display 0
+#include "imgtools/CImg.h"
+#include "imgtools/tinyphash.h"
+
+using namespace cimg_library;
+
 static const camera_config_t camera_config = {
     .pin_pwdn  = 32,
     .pin_reset = -1,
@@ -46,7 +52,7 @@ static const camera_config_t camera_config = {
 
     .jpeg_quality = 12, //0-63 lower number means higher quality
     .fb_count = 1, //if more than one, i2s runs in continuous mode. Use only with JPEG
-    .grab_mode = CAMERA_GRAB_WHEN_EMPTY//CAMERA_GRAB_LATEST. Sets when buffers should be filled
+    .grab_mode = CAMERA_GRAB_LATEST//CAMERA_GRAB_LATEST. Sets when buffers should be filled
 };
 
 
@@ -94,14 +100,31 @@ extern "C" void app_main()
 
     //sdmmc_card_print_info(stdout, card);
 
-    while(1) {
+    uint64_t last_phash = 0;
 
-        vTaskDelay(pdMS_TO_TICKS(1000));
+    while(1) {
+        vTaskDelay(1);
 
         camera_fb_t *fb = esp_camera_fb_get();
         if (!fb) {
             ESP_LOGE("camera", "Camera Capture Failed");
             continue;
+        }
+
+        uint8_t phash_distance;
+        CImg<uint8_t> greyscale;
+        {
+            uint8_t *rgb888 = (uint8_t*)heap_caps_malloc(fb->width * fb->height * 3, MALLOC_CAP_SPIRAM);
+            fmt2rgb888(fb->buf, fb->len, PIXFORMAT_JPEG, rgb888);
+
+            CImg<uint8_t> img(rgb888, 3, fb->width, fb->height, 1, true);
+            img.permute_axes("yzcx");
+            greyscale = img.get_resize(38, 38); //.RGBtoYCbCr().channel(0);
+            free(rgb888);
+
+            uint64_t phash = 0; //tinyphash_dct_easy(greyscale.data(), 38, 38);
+            phash_distance = tinyphash_hamming_distance(phash, last_phash);
+            last_phash = phash;
         }
 
         char header[] = {
@@ -119,20 +142,32 @@ extern "C" void app_main()
         uart_write_bytes(UART_NUM_0, &fb->len, sizeof(fb->len));
         uart_write_bytes(UART_NUM_0, fb->buf, fb->len);
 
+        uint32_t grey_size = greyscale.size();
+        uint32_t grey_w = greyscale.width();
+        uint32_t grey_h = greyscale.height();
+        uart_write_bytes(UART_NUM_0, &grey_size, sizeof(grey_size));
+        uart_write_bytes(UART_NUM_0, &grey_w, sizeof(grey_w));
+        uart_write_bytes(UART_NUM_0, &grey_h, sizeof(grey_h));
+        uart_write_bytes(UART_NUM_0, greyscale.data(), grey_size);
+
+        uart_write_bytes(UART_NUM_0, &phash_distance, sizeof(phash_distance));
+
         uint32_t durationMs = xTaskGetTickCount() - start;
         uart_write_bytes(UART_NUM_0, &durationMs, sizeof(durationMs));
 
+        if(phash_distance > 25) {
+            char buf[32];
+            snprintf(buf, sizeof(buf), "/sdcard/%04ld.jpg", fb->timestamp.tv_sec%10000);
 
-        char buf[32];
-        snprintf(buf, sizeof(buf), "/sdcard/%04ld.jpg", fb->timestamp.tv_sec%10000);
+            FILE *f = fopen(buf, "w");
+            fwrite(fb->buf, 1, fb->len, f);
+            fclose(f);
 
-        FILE *f = fopen(buf, "w");
-        fwrite(fb->buf, 1, fb->len, f);
-        fclose(f);
+            durationMs = xTaskGetTickCount() - start;
+        } else {
+            durationMs = 0;
+        }
 
-        
-
-        durationMs = xTaskGetTickCount() - start;
         uart_write_bytes(UART_NUM_0, &durationMs, sizeof(durationMs));
 
         esp_camera_fb_return(fb);
