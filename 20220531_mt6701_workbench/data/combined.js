@@ -9,17 +9,21 @@ ge1doot.canvas = function (elem) {
     return false
   }
   canvas.ctx = canvas.elem.getContext('2d')
+  canvas.dpr = window.devicePixelRatio || 1;
   canvas.setSize = function () {
     var o = this.elem
-    var w = this.elem.offsetWidth * 1
-    var h = this.elem.offsetHeight * 1
+    var w = this.elem.offsetWidth
+    var h = this.elem.offsetHeight
     if (w != this.width || h != this.height) {
       for (this.left = 0, this.top = 0; o != null; o = o.offsetParent) {
         this.left += o.offsetLeft
         this.top += o.offsetTop
       }
-      this.width = this.elem.width = w
-      this.height = this.elem.height = h
+      this.elem.width = w*this.dpr
+      this.elem.height = h*this.dpr
+      this.width = w
+      this.height = h
+      canvas.ctx.scale(this.dpr, this.dpr)
       this.resize && this.resize()
     }
   }
@@ -337,6 +341,9 @@ Manager.prototype.onMessage = function (event) {
     case '_gst':
       if (this.grid) this.grid.onMessageState(data)
       break
+    case '_gtb':
+      if (this.grid) this.grid.setCurrentTab(data['tab'])
+      break
   }
 }
 
@@ -443,12 +450,11 @@ Position.prototype.equals = function (o) {
 }
 
 function Widget(grid, uuid, element) {
-  this.MIN_LIBRARY_VERSION = 0x040000
-
   this.x = 0
   this.y = 0
   this.w = 2
   this.h = 2
+  this.tab = 0
 
   this.grid = grid
   this.uuid = uuid
@@ -462,12 +468,15 @@ function Widget(grid, uuid, element) {
 
 Widget.SUBCLASSES = []
 
+Widget.prototype.MIN_LIBRARY_VERSION = 0x040000
+
 Widget.prototype.PROPERTIES = {
   id: new Prop(String).setIgnoreInBuilder(),
   x: new Prop(Number).setIgnoreInBuilder(),
   y: new Prop(Number).setIgnoreInBuilder(),
   w: new Prop(Number).setIgnoreInBuilder(),
   h: new Prop(Number).setIgnoreInBuilder(),
+  tab: new Prop(Number).setIgnoreInBuilder(),
   css: new Prop(
     Object,
     function () {
@@ -1460,7 +1469,16 @@ Widget.createSubclass(Button, {
   valign: new Prop(String, undefined, function (val) {
     this.valign = val
     this.el.style.alignItems = val
-  }).setOptions(['flex-start', 'center', 'flex-end'])
+  }).setOptions(['flex-start', 'center', 'flex-end']),
+  disabled: new Prop(
+    Boolean,
+    function () {
+      return this.el.disabled
+    },
+    function (val) {
+      this.el.disabled = !!val
+    }
+  )
 })
 
 function Checkbox(grid, uuid) {
@@ -1498,7 +1516,6 @@ Checkbox.prototype.applyState = function (state) {
 
 Checkbox.prototype.updatePosition = function (x, y, scaleX, scaleY) {
   Widget.prototype.updatePosition.call(this, x, y, scaleX, scaleY)
-
   setTimeout(this.canvas.setSize.bind(this.canvas), 0)
 }
 
@@ -1579,6 +1596,8 @@ Widget.createSubclass(Circle, {
   showValue: new Prop(Boolean)
 })
 
+Circle.prototype.MIN_LIBRARY_VERSION = 0x040700
+
 Circle.prototype.applyState = function (state) {
   Widget.prototype.applyState.call(this, state)
   this.draw()
@@ -1595,35 +1614,36 @@ Circle.prototype.draw = function () {
 
   ctx.save()
 
-  var padding = 4 + this.lineWidth/2
+  var padding = 4 + this.lineWidth / 2
   var w = this.canvas.width
   var h = this.canvas.height
-  var arcRadius = Math.max(1, Math.min(w, h)/2 - padding)
+  var arcRadius = Math.max(1, Math.min(w, h) / 2 - padding)
 
-  if(!w || !h) {
+  if (!w || !h) {
     return
   }
 
   var valueStartClipped = Math.max(this.valueStart, this.min)
-  var angleStart = ((valueStartClipped - this.min) / (this.max - this.min)) * Math.PI * 2;
-  var angleEnd = ((this.value - this.min) / (this.max - this.min)) * Math.PI * 2;
+  var angleStart =
+    ((valueStartClipped - this.min) / (this.max - this.min)) * Math.PI * 2
+  var angleEnd = ((this.value - this.min) / (this.max - this.min)) * Math.PI * 2
   // Let's start on top
-  angleStart -= Math.PI/2;
-  angleEnd -= Math.PI/2;
+  angleStart -= Math.PI / 2
+  angleEnd -= Math.PI / 2
 
   ctx.lineWidth = this.lineWidth
 
-  ctx.beginPath();
-  ctx.globalAlpha = 0.1;
+  ctx.beginPath()
+  ctx.globalAlpha = 0.1
   ctx.strokeStyle = this.color
-  ctx.arc(w/2, h/2, arcRadius, 0, Math.PI*2)
-  ctx.stroke();
+  ctx.arc(w / 2, h / 2, arcRadius, 0, Math.PI * 2)
+  ctx.stroke()
 
-  ctx.globalAlpha = 1;
-  ctx.beginPath();
+  ctx.globalAlpha = 1
+  ctx.beginPath()
   ctx.strokeStyle = this.color
-  ctx.arc(w/2, h/2, arcRadius, angleStart, angleEnd);
-  ctx.stroke();
+  ctx.arc(w / 2, h / 2, arcRadius, angleStart, angleEnd)
+  ctx.stroke()
 
   if (this.showValue) {
     ctx.translate(w / 2, h / 2)
@@ -1728,7 +1748,16 @@ Widget.createSubclass(Input, {
     function (val) {
       this.input.type = val
     }
-  ).setOptions([ 'text', 'number', 'password' ])
+  ).setOptions(['text', 'number', 'password']),
+  disabled: new Prop(
+    Boolean,
+    function () {
+      return this.input.disabled
+    },
+    function (val) {
+      this.input.disabled = !!val
+    }
+  )
 })
 
 function Joystick(grid, uuid) {
@@ -1951,7 +1980,10 @@ Led.prototype.draw = function () {
 function Orientation(grid, uuid) {
   this.color = '#FF0000'
 
-  if (window['RbGravitySensor'] === undefined) {
+  if (
+    window['RbGravitySensor'] === undefined &&
+    window['IN_RB_GRID_DESIGNER'] !== true
+  ) {
     this.enabled = false
     this.canvas = null
 
@@ -1960,16 +1992,20 @@ function Orientation(grid, uuid) {
       'Orientation sensor requires the Android RBController app, version >= 1.9.'
     Widget.call(this, grid, uuid, el)
   } else {
-    this.enabled = true
-    RbGravitySensor.start()
+    this.enabled = window['IN_RB_GRID_DESIGNER'] !== true
 
     var el = document.createElement('canvas')
     Widget.call(this, grid, uuid, Widget.wrapCanvas(el))
     this.canvas = ge1doot.canvas(el)
     this.canvas.resize = this.draw.bind(this)
-  }
 
-  this.MIN_LIBRARY_VERSION = 0x040200
+    if (this.enabled) {
+      RbGravitySensor.start()
+    } else {
+      this.demoRollDelta = 0.02
+      requestAnimationFrame(this.doGridDesignerDemo.bind(this))
+    }
+  }
 
   this.w = 1
   this.h = 1
@@ -1982,6 +2018,8 @@ Widget.createSubclass(Orientation, {
   color: new Prop(String).setIsColor()
 })
 
+Orientation.prototype.MIN_LIBRARY_VERSION = 0x040200
+
 Orientation.prototype.applyState = function (state) {
   Widget.prototype.applyState.call(this, state)
   this.draw()
@@ -1991,6 +2029,18 @@ Orientation.prototype.updatePosition = function (x, y, scaleX, scaleY) {
   Widget.prototype.updatePosition.call(this, x, y, scaleX, scaleY)
 
   if (this.canvas !== null) setTimeout(this.canvas.setSize.bind(this.canvas), 0)
+}
+
+Orientation.prototype.doGridDesignerDemo = function () {
+  if (!this.canvas.elem.isConnected) {
+    return
+  }
+  this.roll += this.demoRollDelta
+  if (this.roll > 1 || this.roll < -1) {
+    this.demoRollDelta *= -1
+  }
+  this.draw()
+  requestAnimationFrame(this.doGridDesignerDemo.bind(this))
 }
 
 Orientation.prototype.draw = function () {
@@ -2023,7 +2073,9 @@ Orientation.prototype.draw = function () {
 }
 
 Orientation.prototype.update = function () {
-  if (this.enabled === false) return
+  if (this.enabled === false) {
+    return
+  }
 
   this.yaw = RbGravitySensor.getYaw()
   this.pitch = RbGravitySensor.getPitch()
@@ -2040,6 +2092,87 @@ Orientation.prototype.update = function () {
   )
   this.draw()
 }
+
+function Select(grid, uuid) {
+  var el = document.createElement('select')
+  el.style.display = 'flex'
+
+  Widget.call(this, grid, uuid, el)
+
+  this.w = 3
+  this.h = 1
+
+  this.el.selectedIndex = this.selectedIndex = 0
+  this.options = "None"
+  this.el.add(new Option("None", "0"))
+
+  this.color = '#000000'
+  this.background = ''
+
+  this.el.addEventListener(
+    'change',
+    function () {
+      this.sendEvent('changed', { value: this.selectedIndex })
+    }.bind(this)
+  )
+}
+
+Widget.createSubclass(Select, {
+  color: new Prop(String, undefined, function (val) {
+    this.color = val
+    this.el.style.color = val
+  }).setIsColor(),
+  background: new Prop(String, undefined, function (val) {
+    this.background = val
+    this.el.style.backgroundColor = val
+  }).setIsColor(),
+  disabled: new Prop(
+    Boolean,
+    function () {
+      return this.el.disabled
+    },
+    function (val) {
+      this.el.disabled = !!val
+    }
+  ),
+  options: new Prop(
+    String,
+    function () {
+      const opts = Array(this.el.length)
+
+      for (let i = 0; i < this.el.length; i++) {
+        opts[this.el[i].value] = this.el[i].text
+      }
+
+      return opts.join(',')
+    },
+
+    function (val) {
+      if (!val) val = "None"
+      while (this.el.length > 0) {
+        this.el.remove(0)
+      }
+
+      const newOpts = val.split(",")
+      for (let index = 0; index < newOpts.length; index++) {
+        this.el.add(new Option(newOpts[index], index))
+      }
+
+      this.options = val
+    }
+  ),
+  selectedIndex: new Prop(
+    Number,
+    function () {
+      return this.el.selectedIndex
+    },
+    function (val) {
+      this.el.selectedIndex = val
+    }
+  ),
+})
+
+Select.prototype.MIN_LIBRARY_VERSION = 0x040800
 
 function Slider(grid, uuid) {
   this.PADDING_FRAC = 0.03
@@ -2199,8 +2332,6 @@ Slider.prototype.draw = function () {
 }
 
 function SpinEdit(grid, uuid) {
-  this.MIN_LIBRARY_VERSION = 0x040600
-
   this.color = '#000000'
   this.fontSize = 14
   this.value = 0
@@ -2237,6 +2368,8 @@ Widget.createSubclass(SpinEdit, {
   step: new Prop(Number),
   precision: new Prop(Number)
 })
+
+SpinEdit.prototype.MIN_LIBRARY_VERSION = 0x040600
 
 SpinEdit.prototype.applyState = function (state) {
   Widget.prototype.applyState.call(this, state)
@@ -2368,7 +2501,13 @@ function Grid(manager, elementId, data) {
 
   this.canvas = document.createElement('canvas')
   this.canvas.style.position = 'absolute'
+  this.canvas.style.top = '0px'
   this.el.appendChild(this.canvas)
+
+  this.tabs = []
+  this.currentTabIdx = 0
+  this.setTabCount(1)
+  this.setCurrentTab(0)
 
   window.addEventListener('resize', this.onResize.bind(this))
 
@@ -2393,6 +2532,46 @@ function Grid(manager, elementId, data) {
   this.scaleY = 1
 
   this.reset(data)
+}
+
+Grid.prototype.setCurrentTab = function (idx) {
+  this.tabs[this.currentTabIdx].style.display = 'none'
+  this.tabs[idx].style.display = 'block'
+  this.currentTabIdx = idx
+  for (w of this.widgets)
+    w.applyState(w.getState())
+}
+
+Grid.prototype.moveToTab = function (widget, tab, oldTab) {
+  widget.tab = oldTab
+  this.removeWidget(widget)
+  widget.tab = tab
+  this.addWidgetConstructed(widget)
+}
+
+Grid.prototype.setTabCount = function (count) {
+  if (this.tabs.length === count || count <= 0) {
+    return
+  }
+
+  if (this.tabs.length < count) {
+    for (var i = this.tabs.length; i < count; ++i) {
+      var t = document.createElement('div')
+      t.style.width = '100%'
+      t.style.height = '100%'
+      t.style.display = 'none'
+      this.el.appendChild(t) 
+      this.tabs[i] = t
+    }
+  } else {
+    while (this.tabs.length > count) {
+      var t = this.tabs.pop()
+      this.el.removeChild(t)
+    }
+    if (this.currentTabIdx >= this.tabs.length) {
+      this.currentTabIdx = this.tabs.length - 1
+    }
+  }
 }
 
 Grid.prototype.reset = function (data) {
@@ -2529,7 +2708,10 @@ Grid.prototype.addWidgetConstructed = function (widget) {
   widget.updatePosition()
   widget.setEventListener(this.onWidgetEvent.bind(this))
 
-  this.el.appendChild(widget.el)
+  
+  if (this.tabs.length <= widget.tab) 
+    this.setTabCount(widget.tab + 1)
+  this.tabs[widget.tab].appendChild(widget.el)
   this.widgets.push(widget)
 }
 
@@ -2537,7 +2719,7 @@ Grid.prototype.removeWidget = function (widget) {
   var idx = this.widgets.indexOf(widget)
   if (idx === -1) return false
 
-  this.el.removeChild(widget.el)
+  this.tabs[widget.tab].removeChild(widget.el)
   this.widgets.splice(idx, 1)
   return true
 }
@@ -2546,9 +2728,10 @@ Grid.prototype.clear = function () {
   var len = this.widgets.length
   for (var i = 0; i < len; ++i) {
     var w = this.widgets[i]
-    this.el.removeChild(w.el)
+    this.tabs[w.tab].removeChild(w.el)
   }
   this.widgets = []
+  this.setTabCount(1)
 }
 
 Grid.prototype.onWidgetEvent = function (w, name, extra, mustArrive, callback) {
