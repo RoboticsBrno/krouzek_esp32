@@ -183,8 +183,6 @@ extern "C" void app_main()
         gpio_set_level((gpio_num_t)camera_config.pin_pwdn, 0);
     }
 
-    
-
     while(true) {
         auto err = esp_camera_init(&camera_config);
         if(err == ESP_OK) {
@@ -204,7 +202,6 @@ extern "C" void app_main()
 
     // Start serving the web page
     rb_web_start(80);
-    
 
     cam_jpg_data web_jpg = {
         .frame = (uint8_t*)heap_caps_malloc(5*1024, MALLOC_CAP_SPIRAM),
