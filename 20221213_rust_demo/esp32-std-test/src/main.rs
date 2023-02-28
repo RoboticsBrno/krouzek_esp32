@@ -7,6 +7,8 @@ use esp_idf_hal::prelude::*;
 use esp_idf_hal::uart;
 use esp_idf_sys::EspError;
 
+use getrandom;
+
 use timer::Timer;
 use uart_utils::Command;
 use uart_utils::send_packet;
@@ -47,10 +49,12 @@ struct Rgb {
 
 impl Rgb {
     fn random() -> Rgb {
+        let mut buf = [0u8; 3];
+        getrandom::getrandom(&mut buf).unwrap();
         Rgb {
-            r: 42,
-            g: 200,
-            b: 60,
+            r: buf[0],
+            g: buf[1],
+            b: buf[2],
         }
     }
 
@@ -246,6 +250,8 @@ fn main() {
     // It is necessary to call this function once. Otherwise some patches to the runtime
     // implemented by esp-idf-sys might not link properly. See https://github.com/esp-rs/esp-idf-template/issues/71
     esp_idf_sys::link_patches();
+
+    println!("Hello world");
 
     let peripherals = Peripherals::take().unwrap();
     let pins = peripherals.pins;

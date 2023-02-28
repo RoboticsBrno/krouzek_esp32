@@ -19,7 +19,7 @@ pub fn read_char(uart: &mut uart::UartRxDriver) -> Result<char, EspError> {
 
     let read = uart.read(&mut buf, 10000)?;
     if read != buf.len() {
-        return Err(EspError::from_infallible::<ESP_ERR_TIMEOUT>());
+        return Err(EspError::from(ESP_ERR_TIMEOUT).unwrap());
     }
     Ok(buf[0] as char)
 }

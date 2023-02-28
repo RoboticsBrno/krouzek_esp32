@@ -16,8 +16,9 @@ opt-level = "z"
 pio = ["esp-idf-sys/pio"]
 
 [dependencies]
-esp-idf-hal = "0.40.1"
-esp-idf-sys = { version = "0.32.1", features = ["binstart"] }
+esp-idf-hal = "0.39.0"
+esp-idf-sys = { version = "0.31.1", features = ["binstart"] }
+getrandom = "0.2.8"
 
 
 [build-dependencies]
