@@ -1533,7 +1533,7 @@ Camera.prototype.downloadFrame = function() {
 
   var req = new XMLHttpRequest();
   req.responseType = 'blob';
-  req.timeout = 500
+  req.timeout = 1000
 
   req.addEventListener("load", function() {
     if(req.status !== 200) {
@@ -1573,8 +1573,8 @@ Camera.prototype.draw = function() {
     fw = this.frame.width
     fh = this.frame.height
   } else {
-    fw = 4
-    fh = 3
+    fw = 320
+    fh = 240
   }
 
   ctx.clearRect(0, 0, cw, ch)
