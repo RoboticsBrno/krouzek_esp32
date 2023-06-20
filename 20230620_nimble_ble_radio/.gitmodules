@@ -1,0 +1,15 @@
+[submodule "lib/RB3204-RBCX-coproc-comm"]
+	path = lib/RB3204-RBCX-coproc-comm
+	url = git@github.com:RoboticsBrno/RB3204-RBCX-coproc-comm.git
+[submodule "lib/RB3204-RBCX-library"]
+	path = lib/RB3204-RBCX-library
+	url = git@github.com:RoboticsBrno/RB3204-RBCX-library.git
+[submodule "lib/Esp32-RBGridUI"]
+	path = lib/Esp32-RBGridUI
+	url = git@github.com:RoboticsBrno/Esp32-RBGridUI.git
+[submodule "lib/RB3201-RBProtocol-library"]
+	path = lib/RB3201-RBProtocol-library
+	url = git@github.com:RoboticsBrno/RB3201-RBProtocol-library.git
+[submodule "lib/Esp32-Mcp3008-LineSensor"]
+	path = lib/Esp32-Mcp3008-LineSensor
+	url = git@github.com:RoboticsBrno/Esp32-Mcp3008-LineSensor.git
