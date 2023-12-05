@@ -22,8 +22,7 @@ void setup() {
     
     // !!!
     ///
-    // Kanály A0 a A1 se mi nepodařilo zprovoznit. analogRead ani manuální inicializace nefunguje,
-    // kanály se chovají, jako kdyby nebyly připojeny k fyzickým pinům (plavou v neurčitu a ovlivňuje je napětí na ostatních pinech)
+    // Kanály A0 a A1 jsou na pinech PA2 a PA1, na které je na dev kitech připojený krystal, nejdou tedy použít.
     //
     // Kanály A5, A6 a A7 se zdají být na pinech, které používá UART, nejdou tedy asi použít zároveň s ním.
     //
@@ -74,8 +73,8 @@ void loop() {
     // Arduino vyčítání, funguje dobře, ale je pomalé - ADC převodní se celý zapne,
     // přečte a vypne při každém analogRead volání
     write_header(0x01, 2*4);
-    //write_scalar(analogRead(A0)); // -> pin PA2 -- nefunguje?
-    //write_scalar(analogRead(A1)); // -> pin PA1 -- nefunguje?
+    //write_scalar(analogRead(A0)); // -> pin PA2 -- krystal
+    //write_scalar(analogRead(A1)); // -> pin PA1 -- krystal
     write_scalar(analogRead(A2)); // -> pin PC4
     write_scalar(analogRead(A3)); // -> pin PD2
     //write_scalar(analogRead(A4)); // -> pin PD3
