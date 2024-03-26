@@ -1,9 +1,37 @@
 #include <robotka.h>
 #include <esp_log.h>
+#include <functional>
 
 #include "../pathfinding.hpp"
 #include "../states.hpp"
+#include "move_utils.hpp"
 
+typedef std::function<void()> GoalCb;
+
+struct Goal {
+    Goal(Position target) {
+        this->target = target;
+    }
+
+    Goal(uint8_t x, uint8_t y) {
+        this->target.x = x;
+        this->target.y = y;
+    }
+
+    Goal&& setOnTargetReached(GoalCb cb) {
+        this->onTargetReached = cb;
+        return std::move(*this);
+    }
+
+    Goal&& setOnPositionChanged(GoalCb cb) {
+        this->onPositionChanged = cb;
+        return std::move(*this);
+    }
+
+    Position target;
+    GoalCb onTargetReached;
+    GoalCb onPositionChanged;
+};
 
 static StateMove gStateMove = StateMove::CHECK_ORIENTATION;
 static Grid gGrid = {};
@@ -11,68 +39,104 @@ static Grid gGrid = {};
 static Position gRobotPos = STARTING_POSITION;
 static Heading gRobotHeading = Heading::RIGHT;
 static Heading gTargetHeading = gRobotHeading;
+static bool gKetchupDoorClosed = false;
 
-static Path gCurrentPath;
+static std::vector<Goal> gCurrentGoals;
+static Path gCalculatedPath;
 
-static void fillStartingPath() {
-    if(!findPath(gGrid, STARTING_POSITION, Position{ .x = 2, .y = 3}, gCurrentPath)) {
-        abort();
+static void fillStartingGoals();
+
+static void recalculatePath() {
+    Position start = gRobotPos;
+    for(const auto& goal : gCurrentGoals) {
+        if(!findPath(gGrid, start, goal.target, gCalculatedPath)) {
+            abort(); // TODO: bude stačit jen počkat?
+        }
+        start = goal.target;
     }
-    // TODO: more points
 }
 
-static void startRotation(Heading target) {
-    gTargetHeading = target;
+static void onUnloadPositionReached() {
+    startDriveBackwards();
+    gCalculatedPath.clear();
 
-    // TODO: ify nebo matika
-    // na zjisteni smeru motoru
-    const int leftMm = 150;
-    const int rightMm = -150;
+    gRobotPos.y += 1; // BACK_TO_LAST_NODE očekává, že v gRobotPos je ještě předchozí pozice
+    gStateMove = StateMove::BACK_TO_LAST_NODE;
 
-    rkMotorsDriveAsync(leftMm, rightMm, 100, []() {
-        // TODO: implementovat failover
-        ESP_LOGE("Move", "rkMotorsDriveAsync callback sooner than we found line!");
-    });
+    fillStartingGoals();
 }
 
-static void startDriveForward() {
-    const int leftMm = 150;
-    const int rightMm = 150;
+static void onKetchupCollectPositionReached() {
+    if(!gKetchupDoorClosed) {
+        return;
+    }
 
-    rkMotorsDriveAsync(leftMm, rightMm, 100, []() {
-        // TODO: implementovat failover
-        ESP_LOGE("Move", "rkMotorsDriveAsync callback sooner than we found line!");
-    });
+    gCurrentGoals.clear();
+    gCalculatedPath.clear();
+
+    gCurrentGoals.push_back(Goal(1, 5));
+    gCurrentGoals.push_back(Goal(0, 5));
+    gCurrentGoals.push_back(
+        Goal(0, 1)
+            .setOnTargetReached(onUnloadPositionReached)
+    );
 }
 
-static bool checkRotationDoneIR() {
-    // TODO: implement
-    return false;
+static void fillStartingGoals() {
+    gCurrentGoals.clear();
+    gCalculatedPath.clear();
+
+    gCurrentGoals.push_back(Goal(2, 3).setOnPositionChanged(onKetchupCollectPositionReached));
+    gCurrentGoals.push_back(Goal(2, 6).setOnPositionChanged(onKetchupCollectPositionReached));
+    gCurrentGoals.push_back(Goal(3, 6).setOnPositionChanged(onKetchupCollectPositionReached));
+    gCurrentGoals.push_back(Goal(3, 0).setOnPositionChanged(onKetchupCollectPositionReached));
 }
-
-static bool checkOnIntersectionIR() {
-    // TODO: implement
-    return false;
-}
-
-
 
 void loopMove() {
     // sendDebugData()
 
+    // Kontrola stop tlačítka
+    if(rkButtonIsPressed(BTN_UP)) {
+        rkMotorsSetPower(0, 0);
+        switchState(State::END);
+        return;
+    }
+
+    // Kontrola a detekce pozice soupeře
+    if(checkIsEnemyClose()) {
+        rkMotorsSetPower(0, 0);
+        startDriveBackwards();
+
+        gCalculatedPath.clear();
+        // TODO: přidat "stěnu" soupeře do mapy pathfindingu
+
+        gStateMove = StateMove::BACK_TO_LAST_NODE;
+    }
+
+    // kontrola, jestli zrovna bereme kečup
+    if(isRobotFullOfKetchup()) {
+        // closeRobotKetchupDoor();
+        gKetchupDoorClosed = true;
+    }
+
     switch(gStateMove) {
         case StateMove::CHECK_ORIENTATION: {
-            if(gCurrentPath.empty()) {
-                fillStartingPath();
+            if(gCurrentGoals.empty()) {
+                fillStartingGoals();
             }
 
-            const Position& next = gCurrentPath.back();
+            if(gCalculatedPath.empty()) {
+                recalculatePath();
+            }
+
+            const Position& next = gCalculatedPath.back();
             const Heading needed = orientationToPos(gRobotPos, next);
 
             if(needed == gRobotHeading) {
                 startDriveForward();
                 gStateMove = StateMove::DRIVE_FORWARD;
             }  else {
+                gTargetHeading = needed;
                 startRotation(needed);
                 gStateMove = StateMove::ROTATE;
             }
@@ -89,11 +153,29 @@ void loopMove() {
         case StateMove::DRIVE_FORWARD: {
             if(checkOnIntersectionIR()) {
                 rkMotorsSetPower(0, 0);
-                gRobotPos = gCurrentPath.back();
-                gCurrentPath.pop_back();
+                gRobotPos = gCalculatedPath.back();
+                gCalculatedPath.pop_back();
 
                 gStateMove = StateMove::CHECK_ORIENTATION;
+
+                const Goal goal = gCurrentGoals.back();
+                if(memcmp(&goal.target, &gRobotPos, sizeof(Position)) == 0) {
+                    gCurrentGoals.pop_back();
+                    if(goal.onTargetReached) {
+                        goal.onTargetReached();
+                    }
+                } else if(goal.onPositionChanged) {
+                    goal.onPositionChanged();
+                }
             }
+            break;
+        }
+        case StateMove::BACK_TO_LAST_NODE: {
+            if(checkOnIntersectionIR()) {
+                rkMotorsSetPower(0, 0);
+                gStateMove = StateMove::CHECK_ORIENTATION;
+            }
+            break;
         }
     }
 }

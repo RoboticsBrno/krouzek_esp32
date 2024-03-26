@@ -12,8 +12,6 @@ enum NodeType : uint8_t {
     WALL = (1 << 1),
 };
 
-typedef std::array<NodeType, GRID_SIZE*GRID_SIZE> Grid;
-
 enum Heading {
     UP,
     RIGHT,
@@ -26,10 +24,27 @@ struct Position {
     uint8_t y;
 };
 
-static constexpr Position STARTING_POSITION = { .x = 0, .y = 3 };
+class Grid {
+public:
+    Grid() : m_nodes{} {
+
+    }
+
+    NodeType get(uint8_t x, uint8_t y) const;
+    void clear();
+
+    void addEnemy(const Position& pos, Heading ori);
+    uint8_t countNonEmpty() const;
+
+private:
+    NodeType& at(uint8_t x, uint8_t y);
+
+    std::array<NodeType, GRID_SIZE*GRID_SIZE> m_nodes;
+};
 
 typedef std::vector<Position> Path;
 
-bool findPath(Grid& grid, Position src, Position dst, Path& out);
+static constexpr Position STARTING_POSITION = { .x = 0, .y = 3 };
 
+bool findPath(Grid& grid, Position src, Position dst, Path& out);
 Heading orientationToPos(Position src, Position dst);
